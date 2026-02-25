@@ -1,0 +1,177 @@
+<!doctype html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <link rel="icon" type="image/png" href="/favicon.png" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LungAI — AI-Powered Lung Disease Detection</title>
+  <style>
+    :root {
+      --bg-color: #F8FAFC;
+      --primary-blue: #0B6EFF;
+      --teal-accent: #00BFA6;
+    }
+
+    #preloader {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: var(--bg-color);
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+      transition: all 0.8s cubic-bezier(0.645, 0.045, 0.355, 1);
+    }
+
+    .loader-content {
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hud-ring {
+      position: absolute;
+      border: 2px solid transparent;
+      border-radius: 50%;
+    }
+
+    .ring-1 {
+      width: 120px;
+      height: 120px;
+      border-top-color: var(--primary-blue);
+      border-bottom-color: var(--primary-blue);
+      animation: hudSpin 2s cubic-bezier(0.5, 0, 0.5, 1) infinite;
+      opacity: 0.6;
+    }
+
+    .ring-2 {
+      width: 150px;
+      height: 150px;
+      border-left-color: var(--teal-accent);
+      border-right-color: var(--teal-accent);
+      animation: hudSpin 3s linear infinite reverse;
+      opacity: 0.4;
+    }
+
+    .preloader-logo {
+      width: 64px;
+      height: 64px;
+      z-index: 10;
+      animation: logoFloat 3s ease-in-out infinite;
+    }
+
+    .preloader-info {
+      margin-top: 50px;
+      text-align: center;
+    }
+
+    .preloader-bar {
+      width: 200px;
+      height: 2px;
+      background: rgba(0, 0, 0, 0.05);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .preloader-fill {
+      width: 0%;
+      height: 100%;
+      background: linear-gradient(90deg, var(--primary-blue), var(--teal-accent), var(--primary-blue));
+      background-size: 200% 100%;
+      animation: preloaderFill 2s ease-in-out forwards, shimmer 2s linear infinite;
+    }
+
+    .preloader-text {
+      margin-top: 12px;
+      font-weight: 800;
+      font-size: 0.65rem;
+      letter-spacing: 0.3em;
+      color: #0F172A;
+      text-transform: uppercase;
+      opacity: 0.8;
+    }
+
+    @keyframes hudSpin {
+      0% {
+        transform: rotate(0deg);
+      }
+
+      100% {
+        transform: rotate(360deg);
+      }
+    }
+
+    @keyframes logoFloat {
+
+      0%,
+      100% {
+        transform: translateY(0);
+      }
+
+      50% {
+        transform: translateY(-8px);
+      }
+    }
+
+    @keyframes shimmer {
+      0% {
+        background-position: 200% 0;
+      }
+
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    @keyframes preloaderFill {
+      0% {
+        width: 0%;
+      }
+
+      100% {
+        width: 100%;
+      }
+    }
+
+    #preloader.loaded {
+      opacity: 0;
+      visibility: hidden;
+      transform: scale(1.1);
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Preloader -->
+  <div id="preloader">
+    <div class="loader-content">
+      <div class="hud-ring ring-1"></div>
+      <div class="hud-ring ring-2"></div>
+      <img src="/static/favicon.png" alt="LungAI" class="preloader-logo" />
+    </div>
+    <div class="preloader-info">
+      <div class="preloader-bar">
+        <div class="preloader-fill"></div>
+      </div>
+      <div class="preloader-text">Initializing Portal</div>
+    </div>
+  </div>
+  <div id="root"></div>
+  <script type="module" src="/src/main.tsx"></script>
+  <script>
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        const preloader = document.getElementById('preloader');
+        if (preloader) preloader.classList.add('loaded');
+      }, 2000);
+    });
+  </script>
+</body>
+
+</html>

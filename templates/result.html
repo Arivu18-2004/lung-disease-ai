@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Analysis Result — LungAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        .vitals-card {
+            background: #fff;
+            border: 1px solid rgba(15, 23, 42, 0.08);
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .vitals-card:hover {
+            border-color: var(--primary-blue);
+            transform: translateY(-3px);
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        }
+
+        .vitals-value {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--text-dark);
+        }
+
+        .vitals-label {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .vitals-icon {
+            color: var(--primary-blue);
+            font-size: 1.2rem;
+        }
+
+        .clinical-risk-badge {
+            padding: 6px 16px;
+            border-radius: 50px;
+            font-weight: 700;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 1px;
+        }
+
+        .risk-critical {
+            background: #ef4444;
+            color: white;
+            box-shadow: 0 0 15px rgba(239, 68, 68, 0.4);
+        }
+
+        .risk-severe {
+            background: #f97316;
+            color: white;
+        }
+
+        .risk-moderate {
+            background: #eab308;
+            color: black;
+        }
+
+        .risk-mild {
+            background: #06b6d4;
+            color: white;
+        }
+
+        .chart-container {
+            position: relative;
+            height: 180px;
+            width: 100%;
+        }
+
+        .heatmap-overlay-control {
+            background: rgba(0, 0, 0, 0.4);
+            padding: 12px;
+            border-radius: 12px;
+            margin-top: 15px;
+        }
+
+        .case-history-item {
+            border-left: 2px solid rgba(0, 0, 0, 0.1);
+            padding-left: 15px;
+            margin-bottom: 20px;
+            position: relative;
+        }
+
+        .case-history-item::before {
+            content: '';
+            position: absolute;
+            left: -6px;
+            top: 0;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--primary-blue);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Preloader -->
+    <div id="preloader">
+        <div class="loader-content">
+            <div class="hud-ring ring-1"></div>
+            <div class="hud-ring ring-2"></div>
+            <img src="{{ url_for('static', filename='favicon.png') }}" alt="LungAI" class="preloader-logo" />
+        </div>
+        <div class="preloader-info">
+            <div class="preloader-bar">
+                <div class="preloader-fill"></div>
+            </div>
+            <div class="preloader-text">Finalizing Analysis</div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg glass-nav">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <div class="brand-icon"><i class="fas fa-lungs"></i></div>
+                <span>Lung<span class="text-accent">AI</span></span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav ms-auto align-items-center gap-4">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/product">Product</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/technology">Technology</a></li>
+                    <li class="nav-item">
+                        <a href="/doctor" class="nav-link"><i class="fas fa-stethoscope me-1"></i>Doctor Portal</a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="/patient/{{ patient.id }}" class="nav-link"><i
+                                class="fas fa-user-injured me-1"></i>Patient Portal</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Demo mode banner -->
+    {% if demo_mode %}
+    <div class="alert alert-warning text-center mb-0 rounded-0"
+        style="background:rgba(255,193,7,0.15);border:none;color:#ffc107;">
+        <i class="fas fa-flask me-2"></i>
+        <strong>Demo Mode:</strong> No trained model found. Showing simulated prediction.
+        Train the model first: <code>python model/train_model.py</code>
+    </div>
+    {% endif %}
+
+    <div class="container-fluid px-4 py-5">
+
+        <!-- Breadcrumb -->
+        <nav aria-label="breadcrumb" class="mb-4">
+            <ol class="breadcrumb glass-breadcrumb">
+                <li class="breadcrumb-item"><a href="/">Home</a></li>
+                <li class="breadcrumb-item active">Analysis Result</li>
+            </ol>
+        </nav>
+
+        <!-- Patient Info Bar -->
+        <div class="glass-card patient-bar mb-4">
+            <div class="row align-items-center g-3">
+                <div class="col-auto">
+                    <div class="patient-avatar">
+                        <i class="fas fa-user-injured"></i>
+                    </div>
+                </div>
+                <div class="col">
+                    <h5 class="mb-0">{{ patient.name }}</h5>
+                    <small class="text-muted">
+                        Age: {{ patient.age }} | {{ patient.gender }} |
+                        Report ID: #{{ report.id }} |
+                        <span class="text-accent">{{ report.created_at.strftime('%d %b %Y, %I:%M %p') }}</span>
+                    </small>
+                </div>
+                <div class="col-auto">
+                    <a href="/patient/{{ patient.id }}" class="btn-outline-glass">
+                        <i class="fas fa-user-injured me-1"></i>Patient Portal
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <div class="row g-4">
+
+            <!-- ── Prediction Card ─────────────────────────────── -->
+            <div class="col-lg-5">
+                <div class="glass-card h-100">
+                    <div class="card-header-custom">
+                        <i class="fas fa-robot me-2"></i>AI Prediction
+                    </div>
+
+                    <!-- Main Prediction Badge -->
+                    <div class="prediction-display text-center py-4">
+                        <div
+                            class="prediction-badge {{ 'badge-pneumonia' if result.prediction in ['PNEUMONIA', 'COVID19', 'TUBERCULOSIS'] else 'badge-normal' }}">
+                            <i
+                                class="fas fa-{{ 'virus' if result.prediction != 'NORMAL' else 'check-circle' }} me-2"></i>
+                            {{ result.prediction }}
+                        </div>
+
+                        <!-- Confidence Bar -->
+                        <div class="confidence-section mt-4 mb-4">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="text-muted small fw-bold">AI Confidence</span>
+                                <span class="confidence-value text-primary fs-5">{{ result.confidence_pct }}%</span>
+                            </div>
+                            <div class="progress glass-progress" style="height: 12px; background: rgba(0,0,0,0.1);">
+                                <div class="progress-bar {{ 'bg-success' if result.prediction == 'NORMAL' else 'bg-danger' if result.prediction == 'PNEUMONIA' else 'bg-warning' }}"
+                                    role="progressbar" style="width: 0%; border-radius: 8px;"
+                                    data-target="{{ result.confidence_pct }}" id="confidenceBar">
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Severity Badge -->
+                        {% if result.prediction != 'NORMAL' %}
+                        <div class="severity-section mb-4">
+                            <span class="text-muted small d-block mb-2 fw-bold text-uppercase"
+                                style="letter-spacing: 1px;">Clinical Severity</span>
+                            <span
+                                class="severity-badge severity-{{ result.severity | lower }} d-inline-flex align-items-center py-2 px-4 shadow-sm">
+                                {% if result.severity == 'Severe' %}
+                                <i class="fas fa-triangle-exclamation me-2"></i>
+                                {% elif result.severity == 'Moderate' %}
+                                <i class="fas fa-circle-exclamation me-2"></i>
+                                {% else %}
+                                <i class="fas fa-circle-info me-2"></i>
+                                {% endif %}
+                                {{ result.severity }}
+                            </span>
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Verdict & Risk -->
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <div
+                            class="verdict-box {{ 'verdict-ok' if result.prediction == 'NORMAL' else 'verdict-warning' }} flex-grow-1 mb-0 me-3">
+                            {% if result.prediction != 'NORMAL' %}
+                            <i class="fas fa-stethoscope me-2"></i>
+                            Abnormal indicators detected.
+                            {% else %}
+                            <i class="fas fa-shield-heart me-2"></i>
+                            Lungs appear healthy.
+                            {% endif %}
+                        </div>
+                        <div class="clinical-risk-badge {{ risk.class }}">
+                            {{ risk.level }} Risk
+                        </div>
+                    </div>
+
+                    <!-- AI Interpretation -->
+                    <div class="p-4 rounded-4 mb-4"
+                        style="background: rgba(37, 99, 235, 0.05); border: 1px solid rgba(37, 99, 235, 0.15);">
+                        <p class="mb-0 small text-dark">
+                            <i class="fas fa-brain me-2 text-primary"></i><strong>Explainable AI Insight:</strong>
+                            <span class="text-muted">{{ medical_info.ai_insight }}</span>
+                        </p>
+                    </div>
+
+                    <!-- Probability Analysis Chart -->
+                    <div class="mb-4">
+                        <h6 class="text-uppercase small fw-bold text-muted mb-3" style="letter-spacing: 1px;">
+                            <i class="fas fa-chart-pie me-2"></i>Probability Distribution
+                        </h6>
+                        <div class="chart-container">
+                            <canvas id="probabilityChart"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Medical Insight -->
+                    <div class="mt-4 p-4 rounded-4"
+                        style="background: rgba(15, 23, 42, 0.03); border: 1px solid rgba(15, 23, 42, 0.08);">
+                        <h6 class="text-uppercase small fw-bold text-primary mb-3" style="letter-spacing: 1px;">
+                            <i class="fas fa-microscope me-2"></i>Pathology Overview
+                        </h6>
+                        <div class="text-muted small" style="line-height: 1.7;">
+                            {% if result.prediction == 'COVID19' %}
+                            <p class="mb-0"><strong>COVID-19:</strong> Clinical presentation typically involves viral
+                                interstitial pneumonia. Radiographic evidence often displays bilateral ground-glass
+                                opacities (GGOs) with a peripheral or subpleural distribution.</p>
+                            {% elif result.prediction == 'PNEUMONIA' %}
+                            <p class="mb-0"><strong>Pneumonia:</strong> Characterized by acute inflammation of the
+                                pulmonary parenchyma. X-ray patterns typically show localized consolidations, lobar
+                                involvement, or diffuse air-bronchograms.</p>
+                            {% elif result.prediction == 'TUBERCULOSIS' %}
+                            <p class="mb-0"><strong>Tuberculosis (TB):</strong> A chronic granulomatous infection.
+                                Radiography may reveal cavitary lesions in upper lobes, hilar lymphadenopathy, or
+                                miliary nodules depending on the stage.</p>
+                            {% else %}
+                            <p class="mb-0"><strong>Normal Presentation:</strong> Radiographic findings show clear lung
+                                fields, sharp costophrenic angles, and normal cardiothoracic ratio with no pulmonary
+                                vascular congestion.</p>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Action Links -->
+                    <div class="d-grid gap-2 mt-4">
+                        <div class="d-flex gap-2">
+                            <a href="/" class="btn-analyse flex-fill text-center py-3">
+                                <i class="fas fa-redo me-2"></i>New Analysis
+                            </a>
+                            <a href="/download-report/{{ report.id }}"
+                                class="btn-glass flex-fill text-center py-3 border-danger-subtle">
+                                <i class="fas fa-file-pdf me-2 text-danger"></i>Get PDF Report
+                            </a>
+                        </div>
+                        <button onclick="printReport()" class="btn-outline-glass w-100 py-2 small opacity-75">
+                            <i class="fas fa-print me-2"></i>Print Summary
+                        </button>
+                    </div>
+
+                    <!-- Clinical Diet Recommendations -->
+                    <div class="mt-4 p-4 rounded-4"
+                        style="background: linear-gradient(135deg, rgba(16, 185, 129, 0.08), rgba(6, 182, 212, 0.08)); border: 1px solid rgba(16, 185, 129, 0.15);">
+                        <h6 class="text-uppercase small fw-bold text-success mb-3" style="letter-spacing: 1px;">
+                            <i class="fas fa-leaf me-2"></i>Recommended Diet Plan
+                        </h6>
+                        <div class="small fw-medium text-dark" style="line-height: 1.8; white-space: pre-line;">
+                            {{ medical_info.diet }}
+                        </div>
+                        <div class="mt-3 pt-3 border-top border-dark-subtle opacity-50 small font-italic text-muted">
+                            <i class="fas fa-info-circle me-1"></i>Consult a clinical nutritionist for a personal plan.
+                        </div>
+                    </div>
+
+                    <!-- Clinical Medication Recommendations (separate card) -->
+                    {% if medical_info.medication %}
+                    <div class="mt-4 p-4 rounded-4"
+                        style="background: linear-gradient(135deg, rgba(59, 130, 246, 0.06), rgba(99, 102, 241, 0.06)); border: 1px solid rgba(59, 130, 246, 0.2);">
+                        <h6 class="text-uppercase small fw-bold text-primary mb-3" style="letter-spacing: 1px;">
+                            <i class="fas fa-pills me-2"></i>Recommended Medication
+                        </h6>
+
+                        <!-- Key Info -->
+                        <div class="small fw-medium text-dark mb-3" style="line-height: 2;">
+                            <div class="mb-1 d-flex align-items-start gap-2">
+                                <i class="fas fa-tablet-alt text-primary mt-1" style="width:14px;"></i>
+                                <div><strong>Medicine:</strong>
+                                    <span class="text-primary ms-1">{{ medical_info.medication.name }}</span>
+                                </div>
+                            </div>
+                            <div class="mb-1 d-flex align-items-start gap-2">
+                                <i class="fas fa-syringe text-muted mt-1" style="width:14px;"></i>
+                                <div><strong>Dosage:</strong>
+                                    <span class="ms-1 text-dark">{{ medical_info.medication.dosage }}</span>
+                                </div>
+                            </div>
+                            <div class="mb-1 d-flex align-items-start gap-2">
+                                <i class="fas fa-tag text-muted mt-1" style="width:14px;"></i>
+                                <div><strong>Est. Price:</strong>
+                                    <span class="ms-1 text-dark">{{ medical_info.medication.price }}</span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Buy Button -->
+                        <a href="{{ medical_info.medication.link }}" target="_blank"
+                            class="btn btn-primary w-100 py-2 mb-3"
+                            style="border-radius: 10px; font-weight: 600; font-size: 0.875rem;">
+                            <i class="fas fa-shopping-cart me-2"></i>Open Buy Options
+                        </a>
+
+                        <!-- Regimen Table -->
+                        {% if medical_info.medication.regimen %}
+                        <div class="mt-2">
+                            <div class="small fw-bold text-uppercase text-muted mb-2" style="letter-spacing: 0.8px;">
+                                <i class="fas fa-table me-1"></i>India Medicine Plan (Informational)
+                            </div>
+                            <div class="table-responsive rounded-3" style="border: 1px solid rgba(59,130,246,0.15);">
+                                <table class="table table-sm table-hover align-middle mb-0" style="font-size: 0.78rem;">
+                                    <thead style="background: rgba(59,130,246,0.08);">
+                                        <tr>
+                                            <th class="ps-3 py-2 text-muted fw-bold">Phase</th>
+                                            <th class="py-2 text-muted fw-bold">Medicine</th>
+                                            <th class="py-2 text-muted fw-bold">Dose Guidance</th>
+                                            <th class="py-2 text-muted fw-bold">Approx. Price</th>
+                                            <th class="py-2 pe-3 text-end text-muted fw-bold">Buy</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {% for item in medical_info.medication.regimen %}
+                                        <tr style="border-top: 1px solid rgba(0,0,0,0.05);">
+                                            <td class="ps-3 py-2 fw-semibold text-dark">{{ item.phase }}</td>
+                                            <td class="py-2 text-dark">{{ item.medicine }}</td>
+                                            <td class="py-2 text-muted">{{ item.dose }}</td>
+                                            <td class="py-2 text-success fw-semibold">{{ item.price }}</td>
+                                            <td class="py-2 pe-3 text-end">
+                                                <a href="{{ item.link }}" target="_blank"
+                                                    class="btn btn-outline-primary btn-sm px-3 py-1"
+                                                    style="font-size:0.7rem; border-radius:6px;">
+                                                    <i class="fas fa-external-link-alt me-1"></i>Open
+                                                </a>
+                                            </td>
+                                        </tr>
+                                        {% endfor %}
+                                    </tbody>
+                                </table>
+                            </div>
+
+                            {% if medical_info.medication.last_updated %}
+                            <div class="small text-muted mt-2">
+                                <i class="fas fa-clock me-1"></i>Price reference: {{
+                                medical_info.medication.last_updated }}
+                            </div>
+                            {% endif %}
+                            {% if medical_info.medication.buying_note %}
+                            <div class="small text-muted mt-1">
+                                <i class="fas fa-file-medical me-1"></i>{{ medical_info.medication.buying_note }}
+                            </div>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+
+                        <div class="mt-3 pt-3 border-top border-dark-subtle opacity-50 small font-italic text-muted">
+                            <i class="fas fa-exclamation-triangle me-1"></i>Always consult a board-certified doctor
+                            before starting any medication.
+                        </div>
+                    </div>
+                    {% endif %}
+
+                </div>
+            </div><!-- /col-lg-5 -->
+
+            <!-- ── X-Ray Images ─────────────────────────────────── -->
+            <div class="col-lg-7">
+                <div class="glass-card h-100">
+                    <div class="card-header-custom">
+                        <i class="fas fa-images me-2"></i>
+                        Imaging Results
+                        {% if heatmap %}
+                        <span class="badge bg-info ms-2">Grad-CAM Enabled</span>
+                        {% endif %}
+                    </div>
+
+                    <div class="row g-3 mt-1">
+                        <!-- Dual Image View with Controls -->
+                        <div class="col-12">
+                            <div class="clinical-viewer-container">
+                                <!-- Base Layer: Original X-Ray -->
+                                <img src="{{ url_for('static', filename=report.image_path) }}" class="viewer-layer"
+                                    alt="Original X-Ray">
+
+                                <!-- Heatmap Layer (Stacked) -->
+                                {% if heatmap %}
+                                <img src="{{ url_for('static', filename=heatmap) }}" id="heatmapOverlay"
+                                    class="viewer-layer heatmap-layer" style="opacity: 0.6;" alt="Heatmap Overlay">
+                                {% endif %}
+
+                                <!-- Status Indicators -->
+                                <div class="viewer-label">
+                                    <i class="fas fa-microscope me-1"></i>CLINICAL WORKSTATION
+                                </div>
+
+                                {% if heatmap %}
+                                <div class="position-absolute bottom-0 end-0 p-3 pointer-events-none"
+                                    style="z-index: 11;">
+                                    <span class="badge bg-primary shadow" id="hmStatus">
+                                        HEATMAP ACTIVE: <span id="opacityVal">60</span>%
+                                    </span>
+                                </div>
+                                {% endif %}
+                            </div>
+
+                            <!-- Integrated Controls Bar -->
+                            {% if heatmap %}
+                            <div class="viewer-controls-bar d-flex align-items-center gap-4">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between mb-1">
+                                        <label class="small text-muted fw-bold text-uppercase"
+                                            style="font-size: 0.65rem;">Attention Intensity</label>
+                                    </div>
+                                    <input type="range" class="form-range" id="opacitySlider" min="0" max="100"
+                                        value="60">
+                                </div>
+                                <div class="vr opacity-25" style="height: 30px;"></div>
+                                <div class="form-check form-switch pt-1">
+                                    <input class="form-check-input" type="checkbox" id="hmToggle" checked>
+                                    <label class="form-check-label small fw-bold text-muted text-uppercase"
+                                        style="font-size: 0.65rem;">Toggle View</label>
+                                </div>
+                                <a href="{{ url_for('static', filename=heatmap) }}"
+                                    download="Heatmap_{{ report.id }}.png" class="btn btn-sm btn-dark px-3 rounded-3">
+                                    <i class="fas fa-download me-2"></i>Export
+                                </a>
+                            </div>
+                            {% else %}
+                            <div class="alert alert-light mt-3 small mb-0 border shadow-sm" style="background:#fff;">
+                                <i class="fas fa-circle-info text-primary me-2"></i>Interpretive heatmap is
+                                generated
+                                only for diagnosed conditions to assist localized focus.
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- IoT Vitals Monitoring -->
+                    <div class="mt-5">
+                        <div class="d-flex justify-content-between align-items-end mb-3">
+                            <h6 class="text-uppercase small fw-bold text-muted mb-0" style="letter-spacing: 1px;">
+                                <i class="fas fa-heartbeat me-2 text-danger"></i>IoT Integrated Vitals
+                            </h6>
+                            <div class="d-flex align-items-center">
+                                <span class="badge bg-success me-2"
+                                    style="width: 8px; height: 8px; border-radius: 50%; padding: 0;"></span>
+                                <span class="text-muted" style="font-size: 0.65rem; font-weight: 700;">LIVE
+                                    CONNECTED</span>
+                                <span class="ms-3 text-primary fw-bold" id="clinicalClock"
+                                    style="font-size: 0.75rem; font-family: 'Courier New', monospace;">00:00:00</span>
+                            </div>
+                        </div>
+                        <div class="row g-3" id="vitalsContainer">
+                            <div class="col-md-3">
+                                <div class="vitals-card p-3 rounded-4 shadow-sm border">
+                                    <div class="vitals-label fw-bold"><i class="fas fa-heart text-danger me-2"></i>HR
+                                        (bpm)</div>
+                                    <div class="vitals-value text-dark" id="val_hr">--</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="vitals-card p-3 rounded-4 shadow-sm border">
+                                    <div class="vitals-label fw-bold"><i class="fas fa-wind text-info me-2"></i>SpO₂
+                                        (%)
+                                    </div>
+                                    <div class="vitals-value text-dark" id="val_spo2">--</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="vitals-card p-3 rounded-4 shadow-sm border">
+                                    <div class="vitals-label fw-bold"><i
+                                            class="fas fa-thermometer-half text-warning me-2"></i>Temp</div>
+                                    <div class="vitals-value text-dark" id="val_temp">--</div>
+                                </div>
+                            </div>
+                            <div class="col-md-3">
+                                <div class="vitals-card p-3 rounded-4 shadow-sm border">
+                                    <div class="vitals-label fw-bold"><i class="fas fa-lungs text-primary me-2"></i>RR
+                                        (rpm)</div>
+                                    <div class="vitals-value text-dark" id="val_rr">--</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Case History Timeline -->
+                    <div class="mt-5 pt-4 border-top border-secondary border-opacity-25">
+                        <h6 class="text-uppercase small fw-bold text-muted mb-4" style="letter-spacing: 1px;">
+                            <i class="fas fa-history me-2"></i>PACS History Timeline
+                        </h6>
+                        <div class="case-history-timeline ps-2">
+                            {% for prev_report in patient.xray_reports | sort(attribute='created_at', reverse=True)
+                            %}
+                            <div
+                                class="case-history-item {{ 'active-report-item' if prev_report.id == report.id else 'opacity-75' }}">
+                                <div class="d-flex justify-content-between align-items-start">
+                                    <div class="pe-3">
+                                        <div class="fw-bold text-dark small">
+                                            {{ 'Current Analysis' if prev_report.id == report.id else 'Previous
+                                            Analysis' }}
+                                        </div>
+                                        <div class="text-muted" style="font-size: 0.7rem;">
+                                            {{ prev_report.created_at.strftime('%d %b %Y, %H:%M %p') }}
+                                        </div>
+                                        <div class="mt-1">
+                                            <span
+                                                class="badge py-1 px-2 {{ 'bg-success-subtle text-success' if prev_report.prediction == 'NORMAL' else 'bg-danger-subtle text-danger' }}"
+                                                style="font-size: 0.55rem; letter-spacing: 0.5px;">
+                                                {{ prev_report.prediction }}
+                                            </span>
+                                            {% if prev_report.severity %}
+                                            <span class="ms-1 text-muted" style="font-size: 0.55rem;">{{
+                                                prev_report.severity }}</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                    {% if prev_report.id != report.id %}
+                                    <a href="/download-report/{{ prev_report.id }}"
+                                        class="btn btn-sm btn-outline-glass py-0 px-2"
+                                        style="font-size: 0.6rem;">OPEN</a>
+                                    {% else %}
+                                    <span class="badge bg-primary text-white" style="font-size: 0.55rem;">ACTIVE</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+
+                </div>
+            </div>
+
+        </div><!-- /row -->
+    </div><!-- /container -->
+
+    <footer class="glass-footer text-center mt-auto">
+        <p class="mb-0">
+            <i class="fas fa-lungs me-2 text-accent"></i>
+            <strong>LungAI</strong> — Final Year AI Project &copy; 2026
+        </p>
+    </footer>
+
+    <!-- Print Only Footer -->
+    <footer class="print-footer d-none">
+        <hr>
+        <p><strong>Clinical Disclaimer:</strong> This report is AI-generated for engineering demonstration and
+            decision
+            support. It is not a final medical diagnosis. Please consult a board-certified radiologist for official
+            results.</p>
+        <p>Generated by LungAI Intelligent Diagnostics System — {{ report.created_at.strftime('%Y-%m-%d %H:%M') }}
+        </p>
+    </footer>
+
+    <!-- Data for JS -->
+    <div id="probData" data-probs='{{ probabilities | tojson }}' class="d-none"></div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Analysis Data for Analytics
+        const probDataElem = document.getElementById('probData');
+        const PROB_DATA = JSON.parse(probDataElem.dataset.probs);
+
+        // Probability Chart Initialization
+        const ctx = document.getElementById('probabilityChart').getContext('2d');
+        window.myChart = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: Object.keys(PROB_DATA),
+                datasets: [{
+                    data: Object.values(PROB_DATA).map(v => (v * 100).toFixed(2)),
+                    backgroundColor: [
+                        'rgba(59, 130, 246, 0.6)', // COVID
+                        'rgba(16, 185, 129, 0.6)', // NORMAL
+                        'rgba(239, 68, 68, 0.6)',  // PNEUMONIA
+                        'rgba(245, 158, 11, 0.6)'  // TB
+                    ],
+                    borderColor: 'rgba(255, 255, 255, 0.2)',
+                    borderWidth: 1,
+                    borderRadius: 8
+                }]
+            },
+            options: {
+                indexAxis: 'y',
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    x: {
+                        max: 100,
+                        grid: { display: false },
+                        ticks: { color: '#64748b', font: { size: 10 } }
+                    },
+                    y: {
+                        grid: { display: false },
+                        ticks: { color: '#1e293b', font: { weight: 'bold', size: 11 } }
+                    }
+                }
+            }
+        });
+
+        // Heatmap Controls Logic
+        const hmOverlay = document.getElementById('heatmapOverlay');
+        const hmSlider = document.getElementById('opacitySlider');
+        const hmToggle = document.getElementById('hmToggle');
+        const hmStatusText = document.getElementById('hmStatus');
+        const opacityValSpan = document.getElementById('opacityVal');
+
+        function updateHeatmap() {
+            if (!hmOverlay) return;
+
+            const isVisible = hmToggle.checked;
+            const opacity = hmSlider.value / 100;
+
+            hmOverlay.style.opacity = isVisible ? opacity : 0;
+            hmOverlay.style.visibility = isVisible ? 'visible' : 'hidden'; // Ensure it doesn't just sit at opacity 0
+
+            if (opacityValSpan) opacityValSpan.innerText = hmSlider.value;
+            if (hmStatusText) {
+                hmStatusText.className = isVisible ? 'badge bg-primary shadow' : 'badge bg-secondary shadow opacity-50';
+                hmStatusText.innerHTML = isVisible ? `HEATMAP ACTIVE: ${hmSlider.value}%` : 'HEATMAP DISABLED';
+            }
+            hmSlider.disabled = !isVisible;
+        }
+
+        if (hmSlider) hmSlider.addEventListener('input', updateHeatmap);
+        if (hmToggle) hmToggle.addEventListener('change', updateHeatmap);
+
+        // Initial state
+        updateHeatmap();
+
+        // IoT Vitals Logic
+        function fetchVitals() {
+            fetch(`/api/simulated-vitals/{{ patient.id }}`)
+                .then(res => res.json())
+                .then(data => {
+                    document.getElementById('val_hr').innerText = data.heart_rate;
+                    document.getElementById('val_spo2').innerText = data.spo2 + '%';
+                    document.getElementById('val_temp').innerText = data.temperature + '°';
+                    document.getElementById('val_rr').innerText = data.respiratory_rate;
+
+                    // Highlight abnormal SpO2 clinically
+                    const spo2Card = document.getElementById('val_spo2').closest('.vitals-card');
+                    if (data.spo2 < 93) {
+                        spo2Card.style.borderColor = '#ef4444';
+                        spo2Card.style.background = 'rgba(239, 68, 68, 0.05)';
+                    } else {
+                        spo2Card.style.borderColor = 'rgba(0,0,0,0.05)';
+                        spo2Card.style.background = '#fff';
+                    }
+                });
+        }
+
+        // Real-time Medical Clock
+        function updateClock() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('en-US', { hour12: false, hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            const dateString = now.toLocaleDateString('en-US', { day: '2-digit', month: 'short', year: 'numeric' });
+            const clockElem = document.getElementById('clinicalClock');
+            if (clockElem) {
+                clockElem.innerText = `${dateString} | ${timeString}`;
+            }
+        }
+
+        // Initialize Monitoring
+        setInterval(fetchVitals, 3000);
+        setInterval(updateClock, 1000);
+        fetchVitals();
+        updateClock();
+
+        // Print Function
+        function printReport() {
+            // Force redraw of chart to ensure it captures in the print buffer
+            if (window.myChart) {
+                window.myChart.update();
+            }
+            window.print();
+        }
+
+        // Animate confidence bar on page load
+        document.addEventListener('DOMContentLoaded', function () {
+            setTimeout(() => {
+                const bar = document.getElementById('confidenceBar');
+                if (bar) {
+                    bar.style.transition = 'width 1.2s ease-in-out';
+                    bar.style.width = bar.dataset.target + '%';
+                }
+            }, 300);
+        });
+
+        // Preloader timeout
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                document.getElementById('preloader').classList.add('loaded');
+            }, 1500);
+        });
+    </script>
+</body>
+
+</html>

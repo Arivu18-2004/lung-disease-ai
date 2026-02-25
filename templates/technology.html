@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Technology — LungAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+        href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;600;700;800&family=Fira+Code:wght@400;500&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+    <style>
+        :root {
+            --tech-purple: #8B5CF6;
+            --tech-indigo: #6366F1;
+        }
+
+        .tech-hero {
+            padding: 160px 0 100px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .tech-badge {
+            background: rgba(139, 92, 246, 0.1);
+            color: var(--tech-purple);
+            padding: 8px 16px;
+            border-radius: 30px;
+            font-weight: 700;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            display: inline-block;
+            margin-bottom: 24px;
+            border: 1px solid rgba(139, 92, 246, 0.2);
+        }
+
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 32px;
+            margin-top: 60px;
+        }
+
+        .feature-card {
+            background: var(--glass-bg);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid var(--glass-border);
+            border-radius: 32px;
+            padding: 40px;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            position: relative;
+            z-index: 1;
+            height: 100%;
+        }
+
+        .feature-card:hover {
+            transform: translateY(-10px) scale(1.02);
+            border-color: var(--primary-blue);
+            box-shadow: 0 20px 40px rgba(11, 110, 255, 0.1);
+        }
+
+        .feature-icon {
+            width: 64px;
+            height: 64px;
+            background: white;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+            color: var(--primary-blue);
+            margin-bottom: 24px;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.05);
+        }
+
+        .feature-card h3 {
+            font-size: 1.5rem;
+            margin-bottom: 16px;
+            color: var(--text-dark);
+        }
+
+        .feature-card p {
+            color: var(--text-muted);
+            font-size: 1rem;
+            line-height: 1.7;
+            margin: 0;
+        }
+
+        /* ── Code Section ────────────────────────────────────────────────────────── */
+        .code-container {
+            background: #0F172A;
+            border-radius: 24px;
+            padding: 32px;
+            margin-top: 80px;
+            position: relative;
+            box-shadow: 0 32px 64px rgba(0, 0, 0, 0.2);
+        }
+
+        .code-header {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+        }
+
+        .dot-red {
+            background: #FF5F56;
+        }
+
+        .dot-yellow {
+            background: #FFBD2E;
+        }
+
+        .dot-green {
+            background: #27C93F;
+        }
+
+        pre {
+            margin: 0;
+            color: #94A3B8;
+            font-family: 'Fira Code', monospace;
+            font-size: 0.95rem;
+            overflow-x: auto;
+        }
+
+        .keyword {
+            color: #C678DD;
+        }
+
+        .string {
+            color: #98C379;
+        }
+
+        .function {
+            color: #61AFEF;
+        }
+
+        .comment {
+            color: #5C6370;
+            font-style: italic;
+        }
+
+        /* ── Tech Stack Orbit ───────────────────────────────────────────────────── */
+        .tech-stack-section {
+            padding: 100px 0;
+            text-align: center;
+        }
+
+        .tech-icon-circle {
+            width: 100px;
+            height: 100px;
+            background: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2.5rem;
+            margin: 20px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.05);
+            transition: all 0.3s;
+            display: inline-flex;
+        }
+
+        .tech-icon-circle:hover {
+            transform: scale(1.1);
+            color: var(--primary-blue);
+        }
+
+        /* ── Interactive Image Section ─────────────────────────────────────────── */
+        .viz-section {
+            background: white;
+            border-radius: 48px;
+            padding: 80px;
+            margin: 100px 0;
+            border: 1px solid var(--glass-border);
+        }
+
+        .viz-img-container {
+            position: relative;
+            border-radius: 24px;
+            overflow: hidden;
+            box-shadow: 0 24px 48px rgba(0, 0, 0, 0.1);
+        }
+
+        .viz-img-container img {
+            width: 100%;
+        }
+
+        .viz-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(to bottom, transparent, rgba(0, 0, 0, 0.6));
+            display: flex;
+            align-items: flex-end;
+            padding: 32px;
+            color: white;
+        }
+
+        /* ── Animations ─────────────────────────────────────────────────────────── */
+        .fade-up {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.8s ease-out;
+        }
+
+        .fade-up.active {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+
+<body>
+    <!-- Preloader -->
+    <div id="preloader">
+        <div class="loader-content">
+            <div class="hud-ring ring-1"></div>
+            <div class="hud-ring ring-2"></div>
+            <img src="{{ url_for('static', filename='favicon.png') }}" alt="LungAI" class="preloader-logo" />
+        </div>
+        <div class="preloader-info">
+            <div class="preloader-bar">
+                <div class="preloader-fill"></div>
+            </div>
+            <div class="preloader-text">Loading Neural Engine</div>
+        </div>
+    </div>
+    <!-- Particle Background -->
+    <div class="particles-container" id="particles"></div>
+    <div class="bg-orb orb-1"></div>
+    <div class="bg-orb orb-2"></div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg glass-nav">
+        <div class="container-fluid px-5 py-3">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <div class="brand-icon"><i class="fas fa-lungs"></i></div>
+                <span>Lung<span class="text-accent">AI</span></span>
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+                <i class="fas fa-bars"></i>
+            </button>
+            <div class="collapse navbar-collapse" id="navMenu">
+                <ul class="navbar-nav ms-auto align-items-center gap-4">
+                    <li class="nav-item"><a class="nav-link" href="/">Home</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/product">Product</a></li>
+                    <li class="nav-item"><a class="nav-link active" href="/technology">Technology</a></li>
+                    <li class="nav-item"><a class="nav-link" href="/doctor"><i
+                                class="fas fa-stethoscope me-1"></i>Doctor Portal</a></li>
+                    <li class="nav-item ms-lg-2">
+                        <a href="/" class="text-decoration-none">
+                            <button class="btn-primary-gradient py-2 px-4 shadow-none">
+                                Start Diagnosis <i class="fas fa-arrow-right ms-2"></i>
+                            </button>
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="tech-hero">
+        <div class="container text-center">
+            <div class="tech-badge fade-up">Our AI Architecture</div>
+            <h1 class="hero-title display-3 fw-bold fade-up">
+                Cutting-Edge <span class="gradient-text">Convolutional Neural Networks</span><br />
+                Powering Precision Diagnosis
+            </h1>
+            <p class="hero-subtitle mx-auto fs-5 text-muted fade-up">
+                Combining advanced deep learning with real-time medical IoT telemetry to create the most comprehensive
+                respiratory diagnostic platform.
+            </p>
+        </div>
+    </section>
+
+    <!-- Key Technologies -->
+    <section class="container mb-5">
+        <div class="feature-grid">
+            <!-- Feature 1 -->
+            <div class="feature-card fade-up">
+                <div class="feature-icon"><i class="fas fa-microchip"></i></div>
+                <h3>Custom CNN Model</h3>
+                <p>A specialized 12-layer Convolutional Neural Network trained on over 5,000 thoracic radiography
+                    samples, optimized for early-stage pneumonia detection with 92.4% validation accuracy.</p>
+            </div>
+            <!-- Feature 2 -->
+            <div class="feature-card fade-up">
+                <div class="feature-icon"><i class="fas fa-eye"></i></div>
+                <h3>Explainable AI (Grad-CAM)</h3>
+                <p>Utilizing Gradient-weighted Class Activation Mapping to provide clinical evidence for every
+                    prediction, highlighting critical regions of interest for specialist review.</p>
+            </div>
+            <!-- Feature 3 -->
+            <div class="feature-card fade-up">
+                <div class="feature-icon"><i class="fas fa-wifi"></i></div>
+                <h3>IoT Telemetry Integration</h3>
+                <p>Seamless real-time synchronization with ESP32-based medical sensors, providing high-frequency data
+                    for SpO₂, Heart Rate, and Core Temperature via WebSocket protocols.</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- Visualization Section -->
+    <section class="container">
+        <div class="viz-section fade-up">
+            <div class="row align-items-center g-5">
+                <div class="col-lg-6">
+                    <div class="viz-img-container">
+                        <img src="https://images.unsplash.com/photo-1581091226825-a6a2a5aee158?auto=format&fit=crop&q=80&w=1200"
+                            alt="Grad-CAM Visualization" />
+                        <div class="viz-overlay">
+                            <div>
+                                <h4 class="fw-bold">Visual Proof</h4>
+                                <p class="mb-0 opacity-75">Heatmap visualization showing the model's area of focus.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-lg-6">
+                    <div class="tech-badge">Interpretability</div>
+                    <h2 class="display-5 fw-bold mb-4">AI that explains <span class="teal-text">its reasoning.</span>
+                    </h2>
+                    <p class="text-muted fs-5 mb-4">
+                        One of the biggest hurdles in medical AI is the "black box" problem. LungAI solves this by
+                        implementing Grad-CAM.
+                    </p>
+                    <ul class="list-unstyled space-y-3 fs-6 text-secondary">
+                        <li class="mb-3"><i class="fas fa-check-circle text-accent me-3"></i> Localization of
+                            pathological indicators</li>
+                        <li class="mb-3"><i class="fas fa-check-circle text-accent me-3"></i> Visual confirmation for
+                            radiologists</li>
+                        <li><i class="fas fa-check-circle text-accent me-3"></i> Confidence scores mapped to spatial
+                            features</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Code Preview Section -->
+    <section class="container py-5">
+        <div class="text-center mb-5 fade-up">
+            <h2 class="display-6 fw-bold">Built for <span class="gradient-text">Modern Infrastructure</span></h2>
+            <p class="text-muted">High-performance Python backend serving optimized PyTorch models.</p>
+        </div>
+        <div class="code-container fade-up">
+            <div class="code-header">
+                <div class="dot dot-red"></div>
+                <div class="dot dot-yellow"></div>
+                <div class="dot dot-green"></div>
+                <span class="ms-2 text-muted small font-monospace">predict_model.py</span>
+            </div>
+            <pre>
+<span class="keyword">def</span> <span class="function">predict_xray</span>(image_path):
+    <span class="comment"># Preprocess the X-Ray image with medical normalization</span>
+    img = preprocess_image(image_path)
+    
+    <span class="comment"># Load the custom trained CNN model</span>
+    model = load_lung_ai_model(<span class="string">'cnn_v2_weights.pth'</span>)
+    
+    <span class="comment"># Perform inference in evaluation mode</span>
+    with torch.no_grad():
+        output = model(img)
+        prediction = torch.softmax(output, dim=1)
+        
+    <span class="comment"># Return structured diagnostic data</span>
+    <span class="keyword">return</span> {
+        <span class="string">"prediction"</span>: <span class="string">"Pneumonia"</span> <span class="keyword">if</span> prediction[0][1] > 0.5 <span class="keyword">else</span> <span class="string">"Normal"</span>,
+        <span class="string">"confidence"</span>: float(prediction[0].max()) * 100,
+        <span class="string">"latency"</span>: <span class="string">"142ms"</span>
+    }</pre>
+        </div>
+    </section>
+
+    <!-- Tech Stack -->
+    <section class="tech-stack-section">
+        <div class="container">
+            <h3 class="fw-bold mb-5 fade-up">Our Modern Tech Stack</h3>
+            <div class="d-flex flex-wrap justify-content-center fade-up">
+                <div class="tech-icon-circle" title="Python"><i class="fab fa-python"></i></div>
+                <div class="tech-icon-circle" title="React"><i class="fab fa-react"></i></div>
+                <div class="tech-icon-circle" title="Flask"><i class="fas fa-flask"></i></div>
+                <div class="tech-icon-circle" title="Docker"><i class="fab fa-docker"></i></div>
+                <div class="tech-icon-circle" title="Raspberry Pi/IoT"><i class="fab fa-raspberry-pi"></i></div>
+                <div class="tech-icon-circle" title="JS/TS"><i class="fab fa-js"></i></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="glass-footer py-5 mt-5">
+        <div class="container text-center">
+            <p class="text-muted mb-0">
+                <i class="fas fa-lungs me-2 text-accent"></i>
+                <strong>LungAI</strong> — Final Year AI Project &copy; 2026. Built with Precision.
+            </p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Particle animation
+        const particlesContainer = document.getElementById('particles');
+        for (let i = 0; i < 30; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const size = Math.random() * 8 + 4;
+            p.style.width = `${size}px`;
+            p.style.height = `${size}px`;
+            p.style.left = `${Math.random() * 100}vw`;
+            p.style.animationDuration = `${Math.random() * 10 + 10}s`;
+            p.style.animationDelay = `${Math.random() * 5}s`;
+            particlesContainer.appendChild(p);
+        }
+
+        // Scroll reveal animation
+        const observerOptions = {
+            threshold: 0.1
+        };
+
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(entry => {
+                if (entry.isIntersecting) {
+                    entry.target.classList.add('active');
+                }
+            });
+        }, observerOptions);
+
+        document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+
+        // Preloader timeout
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                document.getElementById('preloader').classList.add('loaded');
+            }, 2000); // 2 seconds delay
+        });
+    </script>
+</body>
+
+</html>

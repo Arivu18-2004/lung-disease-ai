@@ -1,0 +1,59 @@
+# --- Python ---
+venv/
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+pip-log.txt
+pip-delete-this-directory.txt
+.tox/
+.coverage
+.cache
+nosetests.xml
+coverage.xml
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# --- Environment & Sensitive ---
+.env
+.env.production
+.env.local
+.flaskenv
+*.key
+*.pem
+
+# --- Database ---
+*.db
+*.sqlite3
+
+# --- Build & Static Assets ---
+static/uploads/*
+!static/uploads/.gitkeep
+static/heatmaps/*
+!static/heatmaps/.gitkeep
+static/reports/*
+!static/reports/.gitkeep
+static/fe_assets/
+
+# --- Node / Frontend ---
+node_modules/
+frontend/node_modules/
+frontend/dist/
+dist/
+build/
+.eslintcache
+*.log
+
+# --- OS ---
+.DS_Store
+Thumbs.db
+
+# --- Temporary ---
+tmp/
+temp/
+*.tmp
+walkthrough.md.resolved
+generate_docs_pdf.py

@@ -1,0 +1,32 @@
+# Multi-Class Lung Disease Model Training
+
+This plan outlines the steps to train a 4-class classification model using the `chest_xray_multi` dataset. The model will distinguish between COVID19, Normal, Pneumonia, and Tuberculosis cases.
+
+## Proposed Changes
+
+### [Model Component]
+
+#### [NEW] [train_multi_class.py](file:///Users/britto/Documents/Lung%20Disease%20Project/lung-disease-ai/model/train_multi_class.py)
+Create a new training script tailored for multi-class classification:
+- Use MobileNetV2 as the base model.
+- Configure output layer with 4 units and softmax activation.
+- Implement categorical crossentropy loss.
+- Calculate and apply class weights to handle dataset imbalance.
+- Use `chest_xray_multi` dataset directories (train, val, test).
+
+#### [MODIFY] [predict.py](file:///Users/britto/Documents/Lung%20Disease%20Project/lung-disease-ai/model/predict.py)
+Update prediction logic to support the new model:
+- Update `CLASS_NAMES` to `['COVID19', 'NORMAL', 'PNEUMONIA', 'TUBERCULOSIS']`.
+- Update [predict_xray](file:///Users/britto/Documents/Lung%20Disease%20Project/lung-disease-ai/model/predict.py#75-125) to handle multi-class softmax output.
+- Update [get_severity](file:///Users/britto/Documents/Lung%20Disease%20Project/lung-disease-ai/model/predict.py#59-73) to be applicable to different diseases if possible, or maintain current logic.
+- Ensure [generate_gradcam](file:///Users/britto/Documents/Lung%20Disease%20Project/lung-disease-ai/model/predict.py#127-197) works with the multi-class model.
+
+## Verification Plan
+
+### Automated Tests
+- Run `python3 model/train_multi_class.py --epochs 1` to ensure the training loop starts correctly and class weights are computed as expected.
+- Run a small prediction test using [model/predict.py](file:///Users/britto/Documents/Lung%20Disease%20Project/lung-disease-ai/model/predict.py) with the newly trained weight file (if training is completed) or a dummy check.
+
+### Manual Verification
+- Verify the `training_history_multi.png` plot for accuracy and loss trends.
+- The user should monitor the training progress in the terminal.

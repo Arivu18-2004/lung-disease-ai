@@ -1,0 +1,604 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>LungAI — AI-Powered Lung Disease Detection</title>
+
+  <!-- Fonts & Icons -->
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link
+    href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Poppins:wght@500;600;700;800&display=swap"
+    rel="stylesheet" />
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}" />
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+
+  <!-- Premium Medical SaaS Styles -->
+  <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+
+  <style>
+    /* Inline specific tweaks for the ultra-premium hero */
+    .hero-btn-group {
+      display: flex;
+      gap: 16px;
+      margin-top: 40px;
+      flex-wrap: wrap;
+    }
+
+    .hero-wrapper {
+      position: relative;
+      z-index: 10;
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 0 5%;
+    }
+
+    .right-preview-col {
+      position: relative;
+      perspective: 1000px;
+    }
+  </style>
+</head>
+
+<body>
+  <!-- Preloader -->
+  <div id="preloader">
+    <div class="loader-content">
+      <div class="hud-ring ring-1"></div>
+      <div class="hud-ring ring-2"></div>
+      <img src="{{ url_for('static', filename='favicon.png') }}" alt="LungAI" class="preloader-logo" />
+    </div>
+    <div class="preloader-info">
+      <div class="preloader-bar">
+        <div class="preloader-fill"></div>
+      </div>
+      <div class="preloader-text">Loading Health Systems</div>
+    </div>
+  </div>
+
+  <!-- Background Elements -->
+  <div class="particles-container" id="particles">
+    <!-- JavaScript will populate floating particles -->
+  </div>
+  <div class="bg-orb orb-1"></div>
+  <div class="bg-orb orb-2"></div>
+
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg glass-nav">
+    <div class="container-fluid px-5 py-2">
+      <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+        <div class="brand-icon"><i class="fas fa-lungs"></i></div>
+        <span style="font-family:'Poppins', sans-serif">Lung<span class="text-accent">AI</span></span>
+      </a>
+      <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navMenu">
+        <i class="fas fa-bars"></i>
+      </button>
+      <div class="collapse navbar-collapse" id="navMenu">
+        <ul class="navbar-nav ms-auto align-items-center gap-4">
+          <li class="nav-item">
+            <a class="nav-link active" href="/">Home</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/product">Product</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/technology">Technology</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/doctor"><i class="fas fa-stethoscope me-1"></i>Doctor
+              Portal</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="/patient/1"><i class="fas fa-user-injured me-1"></i>Patient Portal</a>
+          </li>
+          <li class="nav-item ms-lg-2">
+            <button class="btn-primary-gradient py-2 px-4 shadow-none" data-bs-toggle="modal"
+              data-bs-target="#uploadModal">
+              Upload X-Ray <i class="fas fa-arrow-right ms-2"></i>
+            </button>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Flash Messages (Hidden by default, shown via JS if exists) -->
+  {% with messages = get_flashed_messages(with_categories=true) %}
+  {% if messages %}
+  <div class="container-fluid px-5 position-absolute top-0 w-100" style="z-index: 2000; margin-top: 90px;">
+    {% for category, message in messages %}
+    <div
+      class="alert alert-{{ 'danger' if category == 'error' else 'success' }} alert-dismissible fade show glass-modal"
+      role="alert" style="border-radius: 12px;">
+      <i class="fas fa-{{ 'exclamation-circle' if category == 'error' else 'check-circle' }} me-2"></i>
+      {{ message }}
+      <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    {% endfor %}
+  </div>
+  {% endif %}
+  {% endwith %}
+
+  <!-- ── HERO SECTION ──────────────────────────────────────────────────────── -->
+  <section class="hero-section">
+    <div class="hero-wrapper w-100">
+      <div class="row align-items-center min-vh-hero">
+
+        <!-- Left Side: Copy & Buttons & Floating Metrics -->
+        <div class="col-lg-6 position-relative hero-text-col pe-lg-5">
+
+          <!-- Floating Metric 1 (SpO2) -->
+          <div class="metric-card spo2 mc-pos-1">
+            <div class="icon-box"><i class="fas fa-lungs"></i></div>
+            <div class="metric-info">
+              <h6>SpO₂ Level</h6>
+              <h4><span class="animate-number" data-target="98">0</span>% <span class="status-normal">Normal</span></h4>
+            </div>
+          </div>
+
+          <!-- Floating Metric 2 (Heart Rate) -->
+          <div class="metric-card hr mc-pos-2">
+            <div class="icon-box"><i class="fas fa-heart-pulse"></i></div>
+            <div class="metric-info">
+              <h6>Heart Rate</h6>
+              <h4><span class="animate-number" data-target="86">0</span> <span>BPM</span></h4>
+            </div>
+          </div>
+
+          <h1 class="hero-title">
+            AI-Powered Lung Disease Detection<br />
+            <span class="teal-text">in Seconds</span>
+          </h1>
+          <p class="hero-subtitle">
+            Quickly detect lung conditions from chest X-ray images using advanced deep learning and real-time patient
+            monitoring. Built for modern clinical environments.
+          </p>
+
+          <div class="hero-btn-group">
+            <a href="/doctor" class="btn-primary-gradient btn-pulse"
+              style="font-size:1.1rem; padding: 16px 36px; text-decoration: none;">
+              <i class="fas fa-user-md me-2 border-end border-white border-opacity-25 pe-2"></i> Doctor Portal
+            </a>
+            <a href="/patient/1" class="btn-glass" style="font-size:1.1rem; padding: 16px 36px; text-decoration: none;">
+              <i class="fas fa-user-injured me-2"></i> Patient Portal
+            </a>
+          </div>
+        </div>
+
+        <!-- Right Side: Live AI Preview Card -->
+        <div class="col-lg-5 offset-lg-1 right-preview-col mt-5 mt-lg-0">
+
+          <!-- Floating Metric 3 (Temp) -->
+          <div class="metric-card temp mc-pos-3">
+            <div class="icon-box"><i class="fas fa-thermometer-half"></i></div>
+            <div class="metric-info">
+              <h6>Temperature</h6>
+              <h4><span class="animate-number" data-target="36.8">0.0</span>°C <span class="status-normal">Stable</span>
+              </h4>
+            </div>
+          </div>
+
+          <!-- Live Dashboard Card -->
+          <div class="preview-card glass-modal">
+            <div class="preview-header">
+              <div>
+                <h5 class="mb-0" style="font-family:'Poppins', sans-serif;">AI Analysis Preview</h5>
+                <small class="text-muted">Sample Report #AX-892</small>
+              </div>
+              <div class="live-badge">
+                <div class="live-indicator"></div> Live Feed
+              </div>
+            </div>
+
+            <div class="xray-window">
+              <!-- Replace with an actual X-ray static image eventually, but for now a solid color placeholder / linear gradient representing an X-ray view -->
+              <div
+                style="width:100%; height:100%; background:linear-gradient(180deg, #111 0%, #333 100%); display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.2);">
+                <i class="fas fa-x-ray fa-5x"></i>
+              </div>
+              <div class="scanning-line"></div>
+            </div>
+
+            <div class="alert-badge">
+              <i class="fas fa-shield-virus alert-icon"></i>
+              <div>
+                <div style="font-size: 1rem;">Pneumonia Detected</div>
+                <div style="font-size: 0.8rem; font-weight:400; opacity: 0.9;">Attention required</div>
+              </div>
+            </div>
+
+            <div class="confidence-row">
+              <div class="conf-header">
+                <span>AI Confidence Matrix</span>
+                <span class="teal-text"><span class="animate-number" data-target="92.4">0.0</span>%</span>
+              </div>
+              <div class="conf-bar-bg">
+                <div class="conf-bar-fill" id="mockConfidenceBar"
+                  style="width: 0%; transition: width 2s cubic-bezier(0.34, 1.56, 0.64, 1);"></div>
+              </div>
+            </div>
+
+            <p class="text-muted small mb-4" style="line-height:1.5;">
+              <strong>Findings:</strong> Bilateral lower lobe infiltrates present. Increased opacity consistent with
+              infectious etiology. Grad-CAM shows highest activation in the right lower quadrant.<br /><br />
+              <strong>Suggested Actions:</strong> Correlate clinically with SpO₂ IoT monitoring. Prepare for potential
+              broad-spectrum antibiotics administration.
+            </p>
+
+            <div class="status-pills">
+              <div class="status-pill text-danger border-danger border-opacity-25"
+                style="background:rgba(255,77,77,0.05)">
+                <i class="fas fa-arrow-trend-up pill-icon text-danger"></i> Risk Level: High
+              </div>
+              <div class="status-pill text-success border-success border-opacity-25"
+                style="background:rgba(0,230,118,0.05)">
+                <i class="fas fa-check-double pill-icon text-success"></i> Accuracy: 92%
+              </div>
+              <div class="status-pill text-primary border-primary border-opacity-25"
+                style="background:rgba(11,110,255,0.05)">
+                <i class="fas fa-file-medical pill-icon text-primary"></i> Report Generated
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ── TRUSTED METRICS BANNER ────────────────────────────────────────────── -->
+  <section
+    class="trust-metrics py-5 bg-dark text-white border-top border-bottom border-primary border-opacity-25 fade-in-up">
+    <div class="container-fluid px-5 max-w-1400 mx-auto">
+      <div class="row text-center g-4">
+        <div class="col-md-3 col-6 border-end border-white border-opacity-10">
+          <h2 class="fw-bolder fs-1 mb-1"><span class="animate-number text-accent" data-target="99.8">0</span>%</h2>
+          <p class="text-white text-opacity-75 small text-uppercase letter-spacing-1 mb-0">System Uptime</p>
+        </div>
+        <div class="col-md-3 col-6 border-end border-white border-opacity-10 d-none d-md-block">
+          <h2 class="fw-bolder fs-1 mb-1">&lt;<span class="animate-number text-accent" data-target="200">0</span>ms</h2>
+          <p class="text-white text-opacity-75 small text-uppercase letter-spacing-1 mb-0">Inference Latency</p>
+        </div>
+        <div class="col-md-3 col-6 border-end border-white border-opacity-10 d-none d-md-block">
+          <h2 class="fw-bolder fs-1 mb-1"><span class="animate-number text-accent" data-target="1000">0</span>+</h2>
+          <p class="text-white text-opacity-75 small text-uppercase letter-spacing-1 mb-0">Analyzed Scans</p>
+        </div>
+        <div class="col-md-3 col-6">
+          <h2 class="fw-bolder fs-1 mb-1"><span class="animate-number text-accent" data-target="100">0</span>%</h2>
+          <p class="text-white text-opacity-75 small text-uppercase letter-spacing-1 mb-0">HIPAA Compliant</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── CORE ADVANTAGES MATRIX ────────────────────────────────────────────── -->
+  <section class="core-advantages py-5 mt-5 bg-white position-relative" id="core-advantages" style="z-index: 2;">
+    <div class="container-fluid px-5 max-w-1400 mx-auto py-5">
+      <div class="text-center mb-5 fade-in-up">
+        <h2 class="fw-bolder fs-1 mb-3">Smarter Respiratory Care</h2>
+        <p class="text-muted fs-5 max-w-700 mx-auto">Empowering pulmonologists with military-grade AI models paired with
+          seamless hardware integrations.</p>
+      </div>
+
+      <div class="row g-4 pt-4">
+        <div class="col-lg-4 fade-in-up delay-100">
+          <div class="cap-card glass-modal p-5 h-100 rounded-4 border bg-light transition-all hover-lift text-center">
+            <div class="d-inline-flex p-4 rounded-circle mb-4 shadow-sm" style="background: rgba(11,110,255,0.05);">
+              <i class="fas fa-microchip fa-3x text-primary"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Edge AI Execution</h4>
+            <p class="text-muted">Process gigabytes of high-res DICOM/PNG imagery on light infrastructure using our
+              heavily optimized CNN inference engine.</p>
+          </div>
+        </div>
+        <div class="col-lg-4 fade-in-up delay-200">
+          <div class="cap-card glass-modal p-5 h-100 rounded-4 border bg-light transition-all hover-lift text-center">
+            <div class="d-inline-flex p-4 rounded-circle mb-4 shadow-sm" style="background: rgba(0,191,166,0.05);">
+              <i class="fas fa-tower-broadcast fa-3x text-accent"></i>
+            </div>
+            <h4 class="fw-bold mb-3">IoT Telematics</h4>
+            <p class="text-muted">A dedicated RESTful API ingests JSON payloads continuously from remote ESP32 hardware
+              to dynamically track live patient vitals.</p>
+          </div>
+        </div>
+        <div class="col-lg-4 fade-in-up delay-300">
+          <div class="cap-card glass-modal p-5 h-100 rounded-4 border bg-light transition-all hover-lift text-center">
+            <div class="d-inline-flex p-4 rounded-circle mb-4 shadow-sm" style="background: rgba(255,77,77,0.05);">
+              <i class="fas fa-fire fa-3x text-danger"></i>
+            </div>
+            <h4 class="fw-bold mb-3">Explainable Decisions</h4>
+            <p class="text-muted">Never trust a black box. Our AI generates comprehensive Grad-CAM heatmaps highlighting
+              the exact pixel regions driving the diagnosis.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── HOW IT WORKS (SPLIT LAYOUT) ──────────────────────────────────────── -->
+  <section class="how-it-works-section py-5 position-relative" id="how-it-works">
+    <div class="container-fluid px-5 max-w-1400 mx-auto py-5">
+      <div class="row align-items-center g-5">
+
+        <!-- Left: Abstract Graphic -->
+        <div class="col-lg-6 position-relative text-center fade-in-up">
+          <div class="position-absolute w-100 h-100 bg-primary opacity-25 filter-blur-3xl rounded-circle"
+            style="filter: blur(80px); z-index: 0; left: -10%;"></div>
+          <div class="position-relative z-index-2 w-100 mx-auto"
+            style="aspect-ratio: 1; max-width: 450px; max-height: 450px;">
+            <div
+              class="position-absolute top-50 start-50 translate-middle border border-2 border-primary border-opacity-25 rounded-circle"
+              style="width: 80%; height: 80%; animation: spin 20s linear infinite;"></div>
+            <div
+              class="position-absolute top-50 start-50 translate-middle border border-2 border-accent border-opacity-50 rounded-circle"
+              style="border-style: dashed !important; width: 60%; height: 60%; animation: spin-reverse 15s linear infinite;">
+            </div>
+
+            <div
+              class="position-absolute border border-white border-opacity-50 rounded-circle text-white d-flex align-items-center justify-content-center shadow-lg"
+              style="width: 80px; height: 80px; top: 10%; left: 20%; background: var(--gradient-primary); z-index: 3;">
+              <i class="fas fa-file-medical fa-2x"></i>
+            </div>
+            <div
+              class="position-absolute border border-white border-opacity-50 rounded-circle text-white d-flex align-items-center justify-content-center shadow-lg"
+              style="width: 80px; height: 80px; bottom: 20%; right: 10%; background: var(--gradient-accent); z-index: 3;">
+              <i class="fas fa-brain fa-2x"></i>
+            </div>
+            <div
+              class="position-absolute border border-white border-opacity-50 rounded-circle text-white d-flex align-items-center justify-content-center shadow-lg bg-dark"
+              style="width: 140px; height: 140px; top: 50%; left: 50%; transform: translate(-50%, -50%); z-index: 4; box-shadow: 0 10px 40px rgba(0,0,0,0.2) !important;">
+              <i class="fas fa-network-wired fa-3x text-primary"></i>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: Text & Steps -->
+        <div class="col-lg-6 ps-lg-5 fade-in-up delay-200">
+          <div class="badge-pill mb-4 d-inline-block px-3 py-2 rounded-pill"
+            style="background: rgba(11, 110, 255, 0.1); color: var(--primary-blue); font-weight: 600; font-size: 0.85rem;">
+            <i class="fas fa-bolt me-2"></i>Frictionless Workflow
+          </div>
+          <h2 class="fw-bolder fs-1 mb-4">Deploy AI Into Your Clinic in Under 5 Minutes</h2>
+          <p class="text-muted fs-5 mb-5">Say goodbye to complex software implementations. Our platform is designed to
+            be accessible immediately from any modern browser.</p>
+
+          <div class="d-flex mb-4 position-relative">
+            <div
+              class="bg-primary text-white rounded-circle d-flex flex-shrink-0 align-items-center justify-content-center shadow me-4"
+              style="width: 50px; height: 50px; font-weight:bold; font-size: 1.2rem; z-index:2;">1</div>
+            <div>
+              <h5 class="fw-bold mb-2">Upload Radiography</h5>
+              <p class="text-muted mb-0">Drag and drop any standard DICOM, PNG, or JPG chest X-ray into our secure web
+                portal. The image remains completely encrypted.</p>
+            </div>
+          </div>
+
+          <div class="d-flex mb-4 position-relative">
+            <div
+              class="bg-primary text-white rounded-circle d-flex flex-shrink-0 align-items-center justify-content-center shadow me-4"
+              style="width: 50px; height: 50px; font-weight:bold; font-size: 1.2rem; z-index:2;">2</div>
+            <div>
+              <h5 class="fw-bold mb-2">Algorithm Execution</h5>
+              <p class="text-muted mb-0">Our bespoke Convolutional Neural Network analyzes identifying opacities in
+                milliseconds, grading risk severity and activating Grad-CAM.</p>
+            </div>
+          </div>
+
+          <div class="d-flex position-relative">
+            <div
+              class="bg-primary text-white rounded-circle d-flex flex-shrink-0 align-items-center justify-content-center shadow me-4"
+              style="width: 50px; height: 50px; font-weight:bold; font-size: 1.2rem; z-index:2;">3</div>
+            <div>
+              <h5 class="fw-bold mb-2">Correlate with Vitals</h5>
+              <p class="text-muted mb-0">Verify the AI diagnosis against real-time IoT datastreams mapping SpO₂ and
+                Temperature from connected hospital beds.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FINAL CALL TO ACTION ────────────────────────────────────────────── -->
+  <section class="cta-section py-6 position-relative text-center overflow-hidden fade-in-up"
+    style="background: #0f172a;">
+    <div class="position-absolute top-50 start-50 translate-middle bg-primary rounded-circle blur-3xl"
+      style="width: 700px; height: 700px; filter: blur(120px); opacity: 0.5; z-index: 0; pointer-events: none;"></div>
+
+    <div class="container-fluid px-5 position-relative z-index-2">
+      <h2 class="fw-bolder fs-1 mb-4 text-white" style="letter-spacing: -1px;">Experience the Future of Pulmonology</h2>
+      <p class="text-white text-opacity-75 fs-5 mb-5 max-w-700 mx-auto">See why top tier hospitals are trusting LungAI's
+        predictive monitoring suite. Open your browser and upload an X-Ray to trigger a live demo pipeline instantly.
+      </p>
+
+      <div class="d-flex gap-3 justify-content-center flex-wrap">
+        <button class="btn-primary-gradient py-3 px-5 text-decoration-none fs-5 fw-bold border-0" data-bs-toggle="modal"
+          data-bs-target="#uploadModal" style="box-shadow: 0 10px 30px rgba(11,110,255,0.4);">
+          <i class="fas fa-upload me-2 border-end border-white border-opacity-25 pe-2"></i> Run Demo Analysis
+        </button>
+        <a href="/product" class="btn btn-outline-light py-3 px-5 fs-5 fw-bold bg-white bg-opacity-10 backdrop-blur"
+          style="border-width: 2px;">
+          View Full Capabilities
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- ── FOOTER ──────────────────────────────────────────────────────────── -->
+  <footer class="bg-white border-top border-secondary border-opacity-10 pt-5 pb-4">
+    <div class="container-fluid px-5 max-w-1400 mx-auto">
+      <div class="row g-4 mb-4 pb-4 border-bottom border-secondary border-opacity-10">
+        <div class="col-md-5">
+          <a class="navbar-brand d-flex align-items-center gap-2 mb-3 text-dark text-decoration-none" href="/">
+            <div class="brand-icon fs-3"><i class="fas fa-lungs"></i></div>
+            <span class="fs-4" style="font-family:'Poppins', sans-serif">Lung<span class="text-accent">AI</span></span>
+          </a>
+          <p class="text-muted small max-w-400">Advanced diagnostic engine integrating deep learning CNNs with IoT
+            telematics for rapid, interpretable clinical insights.</p>
+        </div>
+        <div class="col-md-7 d-flex justify-content-md-end gap-5">
+          <div>
+            <h6 class="fw-bold mb-3">Product</h6>
+            <ul class="list-unstyled text-muted small d-flex flex-column gap-2">
+              <li><a href="/" class="text-decoration-none text-muted hover-primary">Upload Tool</a></li>
+              <li><a href="/dashboard" class="text-decoration-none text-muted hover-primary">Dashboard</a></li>
+              <li><a href="/product" class="text-decoration-none text-muted hover-primary">Features</a></li>
+            </ul>
+          </div>
+          <div>
+            <h6 class="fw-bold mb-3">Resources</h6>
+            <ul class="list-unstyled text-muted small d-flex flex-column gap-2">
+              <li><a href="#" class="text-decoration-none text-muted hover-primary"><i class="fab fa-github me-1"></i>
+                  Source Code</a></li>
+              <li><a href="#" class="text-decoration-none text-muted hover-primary">API Docs</a></li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <div class="d-flex flex-column flex-md-row justify-content-between align-items-center gap-3">
+        <div class="text-muted" style="font-size: 0.75rem;">
+          &copy; 2026 LungAI Project. All rights reserved.
+        </div>
+        <div class="text-muted opacity-75" style="font-size: 0.7rem; max-width: 500px; text-align: right;">
+          <i class="fas fa-info-circle me-1"></i> <strong>Medical Disclaimer:</strong> This software is a diagnostic
+          aid/prototype. It does not replace professional medical advice, diagnosis, or treatment. Always consult a
+          qualified healthcare provider.
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- ── X-RAY UPLOAD MODAL (Integrated Form) ────────────────────────────── -->
+  <div class="modal fade" id="uploadModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered modal-lg">
+      <div class="modal-content glass-modal border-0">
+        <div class="modal-header border-0 pb-0">
+          <h4 class="modal-title" style="font-family:'Poppins', sans-serif;"><i
+              class="fas fa-cloud-arrow-up text-primary me-2"></i> Start Diagnosis</h4>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        </div>
+        <div class="modal-body p-4 p-md-5 pt-3">
+
+          <form action="/predict" method="post" enctype="multipart/form-data" id="uploadForm">
+            <div class="row g-4">
+
+              <!-- Patient Info -->
+              <div class="col-md-5">
+                <h6 class="mb-3 text-muted" style="letter-spacing: 1px; text-transform: uppercase; font-size: 0.8rem;">
+                  <i class="fas fa-user-circle me-2"></i>Patient Selection
+                </h6>
+
+                <div class="mb-4">
+                  <label class="form-label small fw-semibold">Existing Patient Record</label>
+                  <select name="patient_id" id="patientSelect" class="form-select glass-input">
+                    <option value="">— Create New Record —</option>
+                    {% for p in patients %}
+                    <option value="{{ p.id }}">{{ p.name }} (Age: {{ p.age }})</option>
+                    {% endfor %}
+                  </select>
+                </div>
+
+                <div id="newPatientFields" class="p-3 rounded-3"
+                  style="background:rgba(255,255,255,0.4); border: 1px solid rgba(0,0,0,0.05);">
+                  <label class="form-label small fw-semibold mb-2">New Patient Details</label>
+                  <div class="mb-2">
+                    <input type="text" name="quick_name" class="form-control glass-input" placeholder="Full Name"
+                      id="patientName" />
+                  </div>
+                  <div class="row g-2">
+                    <div class="col-6">
+                      <input type="number" name="quick_age" class="form-control glass-input" placeholder="Age" min="1"
+                        max="120" />
+                    </div>
+                    <div class="col-6">
+                      <select name="quick_gender" class="form-select glass-input">
+                        <option value="Male">Male</option>
+                        <option value="Female">Female</option>
+                        <option value="Other">Other</option>
+                      </select>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Drag & Drop -->
+              <div class="col-md-7">
+                <h6 class="mb-3 text-muted" style="letter-spacing: 1px; text-transform: uppercase; font-size: 0.8rem;">
+                  <i class="fas fa-image me-2"></i>Radiography Upload
+                </h6>
+
+                <div class="drop-zone h-100 d-flex flex-column justify-content-center align-items-center" id="dropZone"
+                  style="min-height: 250px;">
+                  <input type="file" name="xray" id="xrayInput" accept=".png,.jpg,.jpeg,.bmp,.webp" hidden required />
+                  <div class="drop-zone-content" id="dropContent">
+                    <div class="drop-icon" style="color:var(--teal-accent)"><i class="fas fa-x-ray"></i></div>
+                    <h5 class="mb-1">Drag & Drop X-Ray</h5>
+                    <p class="text-muted small px-3">or <span class="text-primary fw-semibold"
+                        style="cursor:pointer; text-decoration: underline;"
+                        onclick="document.getElementById('xrayInput').click()">browse files</span> from your computer
+                    </p>
+                    <p style="font-size: 0.75rem; color:#94a3b8; margin-top:10px;">Supports PNG, JPG, JPEG (Max 16MB)
+                    </p>
+                  </div>
+                  <div class="drop-zone-preview d-none w-100 position-relative" id="previewArea">
+                    <img id="previewImg" src="" alt="X-ray Preview" class="preview-image mt-0 w-100"
+                      style="object-fit:cover; max-height:200px;" />
+                    <button type="button"
+                      class="btn btn-sm btn-danger position-absolute top-0 end-0 m-2 rounded-circle shadow"
+                      onclick="clearPreview()" style="width: 32px; height: 32px; z-index:10;">
+                      <i class="fas fa-times"></i>
+                    </button>
+                    <div class="bg-white bg-opacity-75 position-absolute bottom-0 w-100 text-center py-2 fw-semibold"
+                      id="previewName" style="backdrop-filter: blur(4px);"></div>
+                  </div>
+                </div>
+
+              </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-top" style="border-color: rgba(0,0,0,0.05) !important;">
+              <button type="submit" class="btn-primary-gradient w-100 py-3" id="submitBtn" style="font-size: 1.1rem;">
+                <span id="btnText"><i class="fas fa-microscope me-2"></i> Run AI Diagnosis</span>
+                <span id="btnLoader" class="d-none">
+                  <span class="spinner-border spinner-border-sm me-2"></span>Analysing Image...
+                </span>
+              </button>
+            </div>
+          </form>
+
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+  <script src="{{ url_for('static', filename='js/home.js') }}"></script>
+  <script>
+    // Soft particle generation for the background
+    const container = document.getElementById('particles');
+    for (let i = 0; i < 20; i++) {
+      let p = document.createElement('div');
+      p.className = 'particle';
+      let size = Math.random() * 8 + 4;
+      p.style.width = size + 'px';
+      p.style.height = size + 'px';
+      p.style.left = Math.random() * 100 + 'vw';
+      p.style.animationDuration = Math.random() * 20 + 10 + 's';
+      p.style.animationDelay = Math.random() * 20 + 's';
+      container.appendChild(p);
+    }
+    // Preloader timeout
+    window.addEventListener('load', function () {
+      setTimeout(function () {
+        document.getElementById('preloader').classList.add('loaded');
+      }, 2000); // 2 seconds delay
+    });
+  </script>
+</body>
+
+</html>

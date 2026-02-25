@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Patient Dashboard — LungAI</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap"
+        rel="stylesheet" />
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <link rel="icon" type="image/png" href="{{ url_for('static', filename='favicon.png') }}" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/style.css') }}" />
+</head>
+
+<body>
+    <!-- Preloader -->
+    <div id="preloader">
+        <div class="loader-content">
+            <div class="hud-ring ring-1"></div>
+            <div class="hud-ring ring-2"></div>
+            <img src="{{ url_for('static', filename='favicon.png') }}" alt="LungAI" class="preloader-logo" />
+        </div>
+        <div class="preloader-info">
+            <div class="preloader-bar">
+                <div class="preloader-fill"></div>
+            </div>
+            <div class="preloader-text">Syncing Medical Data</div>
+        </div>
+    </div>
+
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg glass-nav">
+        <div class="container-fluid px-4">
+            <a class="navbar-brand d-flex align-items-center gap-2" href="/">
+                <div class="brand-icon"><i class="fas fa-lungs"></i></div>
+                <span>Lung<span class="text-accent">AI</span></span>
+            </a>
+            <div class="d-flex gap-3">
+                <a href="/" class="nav-link text-white"><i class="fas fa-upload me-1"></i>Analyse</a>
+                <a href="/dashboard" class="nav-link text-white active"><i
+                        class="fas fa-chart-line me-1"></i>Dashboard</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- ── Emergency Alert Banner ──────────────────────────────────────── -->
+    {% if emergency_alert and latest_vitals %}
+    <div class="emergency-banner" id="emergencyBanner">
+        <div class="emergency-pulse"></div>
+        <i class="fas fa-triangle-exclamation me-3 fa-lg"></i>
+        <strong>EMERGENCY ALERT:</strong>
+        Patient <strong>{{ selected_patient.name }}</strong> has critically low SpO₂:
+        <strong>{{ latest_vitals.spo2 }}%</strong>
+        — Immediate medical attention required!
+        <button class="btn-close btn-close-white ms-3"
+            onclick="document.getElementById('emergencyBanner').remove()"></button>
+    </div>
+    {% endif %}
+
+    <div class="container-fluid px-4 py-4">
+
+        <!-- Page Header -->
+        <div class="d-flex align-items-center justify-content-between mb-4 flex-wrap gap-3">
+            <div>
+                <h2 class="page-title mb-1"><i class="fas fa-chart-line me-2 text-accent"></i>Patient Dashboard</h2>
+                <p class="text-muted mb-0">IoT vitals monitoring & X-ray history</p>
+            </div>
+            <a href="/" class="btn-analyse"><i class="fas fa-upload me-2"></i>New Analysis</a>
+        </div>
+
+        <!-- ── Summary Stats ──────────────────────────────────────────────── -->
+        <div class="row g-3 mb-4">
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg,#667eea,#764ba2)">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-value">{{ stats.total_patients }}</div>
+                    <div class="stat-label">Total Patients</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg,#f093fb,#f5576c)">
+                        <i class="fas fa-x-ray"></i>
+                    </div>
+                    <div class="stat-value">{{ stats.total_reports }}</div>
+                    <div class="stat-label">X-Ray Reports</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg,#fa709a,#fee140)">
+                        <i class="fas fa-virus"></i>
+                    </div>
+                    <div class="stat-value">{{ stats.pneumonia_count }}</div>
+                    <div class="stat-label">Pneumonia Cases</div>
+                </div>
+            </div>
+            <div class="col-6 col-md-3">
+                <div class="stat-card">
+                    <div class="stat-icon" style="background:linear-gradient(135deg,#43e97b,#38f9d7)">
+                        <i class="fas fa-wifi"></i>
+                    </div>
+                    <div class="stat-value">{{ stats.active_devices }}</div>
+                    <div class="stat-label">IoT Devices</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ── Patient Selector ────────────────────────────────────────────── -->
+        <div class="glass-card mb-4">
+            <div class="card-header-custom"><i class="fas fa-user me-2"></i>Select Patient</div>
+            <form action="/dashboard" method="get" class="d-flex gap-3 align-items-end flex-wrap">
+                <div class="flex-grow-1">
+                    <label class="form-label text-muted small">Patient</label>
+                    <select name="patient_id" class="form-select glass-input" onchange="this.form.submit()">
+                        <option value="">— Select a patient —</option>
+                        {% for p in patients %}
+                        <option value="{{ p.id }}" {{ 'selected' if selected_patient and selected_patient.id==p.id }}>
+                            {{ p.name }} (Age: {{ p.age }}, {{ p.gender }})
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                <button type="submit" class="btn-analyse px-4">
+                    <i class="fas fa-search me-2"></i>View Patient
+                </button>
+            </form>
+        </div>
+
+        {% if selected_patient %}
+        <!-- ── Live Vitals Cards ────────────────────────────────────────────── -->
+        <div class="glass-card mb-4">
+            <div class="card-header-custom d-flex justify-content-between align-items-center">
+                <span><i class="fas fa-heart-pulse me-2 text-danger"></i>Live IoT Vitals — {{ selected_patient.name
+                    }}</span>
+                <span class="badge bg-success live-badge"><i class="fas fa-circle me-1"></i>Live (auto-refresh
+                    10s)</span>
+            </div>
+
+            {% if latest_vitals %}
+            <div class="row g-3 mt-1" id="vitalsCards">
+
+                <!-- SpO2 -->
+                <div class="col-md-4">
+                    <div class="vitals-card {{ 'vitals-emergency' if latest_vitals.spo2 < 90 }}">
+                        <div class="vitals-icon">
+                            <i class="fas fa-lungs {{ 'text-danger' if latest_vitals.spo2 < 90 else 'text-info' }}"></i>
+                        </div>
+                        <div class="vitals-value" id="spo2Val">{{ latest_vitals.spo2 }}%</div>
+                        <div class="vitals-label">SpO₂ (Oxygen Saturation)</div>
+                        <div class="vitals-status">
+                            {% if latest_vitals.spo2 < 90 %} <span class="badge bg-danger"><i
+                                    class="fas fa-triangle-exclamation me-1"></i>CRITICAL</span>
+                                {% elif latest_vitals.spo2 < 95 %} <span class="badge bg-warning text-dark">Low</span>
+                                    {% else %}
+                                    <span class="badge bg-success">Normal</span>
+                                    {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Temperature -->
+                <div class="col-md-4">
+                    <div class="vitals-card">
+                        <div class="vitals-icon">
+                            <i class="fas fa-thermometer-half text-warning"></i>
+                        </div>
+                        <div class="vitals-value" id="tempVal">{{ latest_vitals.temperature }}°C</div>
+                        <div class="vitals-label">Body Temperature</div>
+                        <div class="vitals-status">
+                            {% if latest_vitals.temperature > 38.5 %}
+                            <span class="badge bg-warning text-dark">Fever</span>
+                            {% elif latest_vitals.temperature > 37.5 %}
+                            <span class="badge bg-warning text-dark">Elevated</span>
+                            {% else %}
+                            <span class="badge bg-success">Normal</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Heart Rate -->
+                <div class="col-md-4">
+                    <div class="vitals-card">
+                        <div class="vitals-icon">
+                            <i class="fas fa-heart text-danger"></i>
+                        </div>
+                        <div class="vitals-value" id="hrVal">{{ latest_vitals.heart_rate }} BPM</div>
+                        <div class="vitals-label">Heart Rate</div>
+                        <div class="vitals-status">
+                            {% if latest_vitals.heart_rate > 100 %}
+                            <span class="badge bg-warning text-dark">Tachycardia</span>
+                            {% elif latest_vitals.heart_rate < 60 %} <span class="badge bg-warning text-dark">
+                                Bradycardia</span>
+                                {% else %}
+                                <span class="badge bg-success">Normal</span>
+                                {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+            </div><!-- /row -->
+
+            <!-- Device info -->
+            <div class="mt-3 text-muted small">
+                <i class="fas fa-microchip me-1"></i>Device: {{ latest_vitals.device_id or 'Unknown' }} &nbsp;|&nbsp;
+                <i class="fas fa-clock me-1"></i>Last reading: {{ latest_vitals.recorded_at.strftime('%d %b %Y, %I:%M:%S
+                %p') }} UTC
+            </div>
+
+            {% else %}
+            <div class="no-data-placeholder">
+                <i class="fas fa-wifi-slash fa-3x mb-3"></i>
+                <p>No IoT vitals received yet for <strong>{{ selected_patient.name }}</strong>.</p>
+                <p class="text-muted small">
+                    Connect your ESP32 device and POST to
+                    <code>http://your-server:5000/api/vitals</code>
+                </p>
+                <pre class="curl-example">curl -X POST http://localhost:5000/api/vitals \
+  -H "Content-Type: application/json" \
+  -d '{
+    "device_id": "ESP32_01",
+    "patient_id": {{ selected_patient.id }},
+    "spo2": 97,
+    "temperature": 36.8,
+    "heart_rate": 78
+  }'</pre>
+            </div>
+            {% endif %}
+        </div>
+
+        <!-- ── X-Ray History Table ─────────────────────────────────────────── -->
+        <div class="glass-card mb-4">
+            <div class="card-header-custom">
+                <i class="fas fa-history me-2"></i>X-Ray Analysis History — {{ selected_patient.name }}
+            </div>
+            {% if xray_history %}
+            <div class="table-responsive mt-2">
+                <table class="table glass-table align-middle">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>X-Ray</th>
+                            <th>Prediction</th>
+                            <th>Confidence</th>
+                            <th>Severity</th>
+                            <th>Date</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for r in xray_history %}
+                        <tr>
+                            <td><code>#{{ r.id }}</code></td>
+                            <td>
+                                <img src="{{ url_for('static', filename=r.image_path) }}" alt="X-Ray"
+                                    class="history-thumb" data-bs-toggle="tooltip" title="Report #{{ r.id }}" />
+                            </td>
+                            <td>
+                                <span
+                                    class="badge {{ 'bg-danger' if r.prediction == 'Pneumonia' else 'bg-success' }} fs-6">
+                                    <i
+                                        class="fas fa-{{ 'virus' if r.prediction == 'Pneumonia' else 'check-circle' }} me-1"></i>
+                                    {{ r.prediction }}
+                                </span>
+                            </td>
+                            <td>
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="progress flex-grow-1"
+                                        style="height:6px;background:rgba(255,255,255,0.1);">
+                                        <div class="progress-bar {{ 'bg-danger' if r.prediction == 'Pneumonia' else 'bg-success' }} set-width"
+                                            data-width="{{ (r.confidence * 100)|round|int if r.confidence else 0 }}%">
+                                        </div>
+                                    </div>
+                                    <span class="small">{{ (r.confidence * 100)|round(1) if r.confidence else 0
+                                        }}%</span>
+                                </div>
+                            </td>
+                            <td>
+                                {% if r.severity and r.severity != 'N/A' %}
+                                <span class="severity-badge severity-{{ r.severity | lower }} py-1 px-2">
+                                    {{ r.severity }}
+                                </span>
+                                {% else %}
+                                <span class="text-muted small">—</span>
+                                {% endif %}
+                            </td>
+                            <td class="text-muted small">{{ r.created_at.strftime('%d %b %Y') }}</td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% else %}
+            <div class="no-data-placeholder">
+                <i class="fas fa-x-ray fa-3x mb-3"></i>
+                <p>No X-ray reports yet for {{ selected_patient.name }}.</p>
+                <a href="/" class="btn-analyse"><i class="fas fa-upload me-2"></i>Upload First X-Ray</a>
+            </div>
+            {% endif %}
+        </div>
+
+        {% else %}
+        <!-- ── No patient selected ────────────────────────────────────────── -->
+        <div class="glass-card text-center py-5">
+            <i class="fas fa-user-circle fa-4x mb-4 text-accent"></i>
+            <h4>Select a patient above to view their dashboard</h4>
+            <p class="text-muted">Live IoT vitals, X-ray analysis history and severity reports will appear here.</p>
+            {% if not patients %}
+            <a href="/" class="btn-analyse mt-3"><i class="fas fa-user-plus me-2"></i>Register First Patient</a>
+            {% endif %}
+        </div>
+        {% endif %}
+
+    </div><!-- /container -->
+
+    <footer class="glass-footer text-center">
+        <p class="mb-0">
+            <i class="fas fa-lungs me-2 text-accent"></i>
+            <strong>LungAI</strong> — Final Year AI Project &copy; 2026
+        </p>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+        // Auto-refresh vitals every 10 seconds via AJAX polling
+        const PATIENT_ID = "{{ selected_patient.id if selected_patient else '' }}";
+
+        if (PATIENT_ID) {
+            setInterval(pollVitals, 10000);
+
+            function pollVitals() {
+                fetch(`/api/vitals/${PATIENT_ID}`)
+                    .then(r => r.json())
+                    .then(data => {
+                        if (!data.latest) return;
+                        const v = data.latest;
+
+                        // Animate value updates
+                        animateValue('spo2Val', v.spo2 + '%');
+                        animateValue('tempVal', v.temperature + '°C');
+                        animateValue('hrVal', v.heart_rate + ' BPM');
+
+                        // Show emergency banner if SPo2 drops below 90
+                        if (v.spo2 < 90 && !document.getElementById('emergencyBanner')) {
+                            const banner = document.createElement('div');
+                            banner.id = 'emergencyBanner';
+                            banner.className = 'emergency-banner';
+                            banner.innerHTML = `<i class="fas fa-triangle-exclamation me-3 fa-lg"></i>
+                <strong>EMERGENCY ALERT:</strong> SpO₂ critically low: <strong>${v.spo2}%</strong>
+                <button class="btn-close btn-close-white ms-3"
+                  onclick="this.parentElement.remove()"></button>`;
+                            const navbar = document.querySelector('.navbar');
+                            if (navbar) {
+                                navbar.after(banner);
+                            } else {
+                                document.body.prepend(banner);
+                            }
+                        }
+                    })
+                    .catch(() => { }); // Silent fail — device may be offline
+            }
+
+            function animateValue(elementId, newValue) {
+                const el = document.getElementById(elementId);
+                if (!el || el.textContent === newValue) return;
+                el.classList.add('vitals-flash');
+                el.textContent = newValue;
+                setTimeout(() => el.classList.remove('vitals-flash'), 600);
+            }
+
+            // Enable Bootstrap tooltips
+            document.querySelectorAll('[data-bs-toggle="tooltip"]').forEach(el => {
+                new bootstrap.Tooltip(el);
+            });
+
+            // Data-width application
+            document.querySelectorAll('.set-width').forEach(el => {
+                if (el.dataset.width) el.style.width = el.dataset.width;
+            });
+
+        }
+
+        // Preloader timeout
+        window.addEventListener('load', function () {
+            setTimeout(function () {
+                const preloader = document.getElementById('preloader');
+                if (preloader) preloader.classList.add('loaded');
+            }, 2000);
+        });
+    </script>
+</body>
+
+</html>

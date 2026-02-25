@@ -1,0 +1,16 @@
+venv/
+node_modules/
+frontend/node_modules/
+frontend/dist/
+.env
+.git/
+__pycache__/
+*.pyc
+.DS_Store
+lung_disease.db
+instance/
+migrations/
+generate_docs_pdf.py
+generate_medical_report.py
+sim_iot.py
+*.log
